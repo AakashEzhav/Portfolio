@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aakash Ezhava — AI Data Analyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+
+    :root {
+      --black: #0a0a0a;
+      --white: #f8f8f6;
+      --g1:    #1c1c1c;
+      --g2:    #3a3a3a;
+      --g3:    #7a7a7a;
+      --g4:    #b8b8b8;
+      --g5:    #e4e4e2;
+      --line:  rgba(10,10,10,.09);
+
+      --serif: 'Cormorant Garamond', Georgia, serif;
+      --mono:  'IBM Plex Mono', 'Courier New', monospace;
+      --sans:  'IBM Plex Sans', system-ui, sans-serif;
+
+      --max: 1100px;
+      --pad: clamp(1.5rem, 5vw, 5rem);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--white);
+      color: var(--black);
+      font-family: var(--sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+    }
+    ::selection { background: var(--black); color: var(--white); }
+    a { color: inherit; text-decoration: none; }
+
+    /* CURSOR */
+    #cur {
+      position: fixed;
+      width: 6px; height: 6px;
+      background: var(--black);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .25s, height .25s, background .25s, outline .25s;
+    }
+    #cur.big { width: 38px; height: 38px; background: transparent; outline: 1px solid var(--black); }
+    @media (pointer:coarse) { #cur { display:none; } body { cursor:auto; } }
+
+    /* LOADER */
+    #loader {
+      position: fixed; inset: 0;
+      background: var(--black);
+      z-index: 8000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2rem;
+      transition: opacity .7s ease, visibility .7s ease;
+    }
+    #loader.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+    .ld-name {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 6vw, 4rem);
+      font-weight: 300;
+      color: var(--white);
+      letter-spacing: .06em;
+    }
+    .ld-bar {
+      width: 180px; height: 1px;
+      background: rgba(248,248,246,.12);
+      position: relative; overflow: hidden;
+    }
+    .ld-bar::after {
+      content: '';
+      position: absolute; top:0; left:0;
+      height:100%; width:0;
+      background: var(--white);
+      animation: ldrun 1.5s cubic-bezier(.4,0,.2,1) forwards;
+    }
+    @keyframes ldrun { to { width:100%; } }
+
+    /* NAV */
+    nav {
+      position: fixed; top:0; left:0; right:0; z-index:500;
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 1.3rem var(--pad);
+      background: rgba(248,248,246,.93);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--black);
+    }
+    .nav-links { display:flex; gap:2.5rem; list-style:none; }
+    .nav-links a {
+      font-family: var(--mono);
+      font-size: .62rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--g3); transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--black); }
+    .nav-right { text-align:right; }
+    .nav-cta {
+      font-family: var(--mono);
+      font-size: .62rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--black);
+      border-bottom: 1px solid var(--black); padding-bottom: 2px;
+      transition: opacity .2s;
+    }
+    .nav-cta:hover { opacity: .5; }
+
+    /* HERO */
+    #hero { min-height: 100svh; padding-top: 80px; display:flex; align-items:stretch; }
+    .hero-inner { width:100%; display:grid; grid-template-rows: 1fr auto; }
+    .hero-top {
+      display:flex; align-items:center;
+      padding: clamp(3rem,8vh,8rem) var(--pad);
+      max-width: var(--max); margin: 0 auto; width:100%;
+    }
+    .hero-content { max-width: 680px; }
+    .h-eye {
+      font-family: var(--mono);
+      font-size: .66rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--g3); margin-bottom: 2.5rem;
+      display:flex; align-items:center; gap: 1rem;
+      opacity:0; animation: rise .5s .2s forwards;
+    }
+    .h-eye::before { content:''; width:28px; height:1px; background:var(--g3); }
+    .h-name {
+      font-family: var(--serif);
+      font-size: clamp(3.5rem,9.5vw,9rem);
+      font-weight: 300; line-height: .9; letter-spacing: -.01em;
+      color: var(--black); margin-bottom: 2.5rem;
+      opacity:0; animation: rise .7s .35s forwards;
+    }
+    .h-name em { font-style:italic; color:var(--g3); }
+    .h-sub {
+      font-size: .975rem; font-weight:300; color:var(--g2);
+      max-width: 400px; line-height:1.8; margin-bottom: 3.5rem;
+      opacity:0; animation: rise .7s .5s forwards;
+    }
+    .h-btns {
+      display:flex; gap:1rem;
+      opacity:0; animation: rise .6s .65s forwards;
+    }
+    .btn-solid {
+      font-family: var(--mono);
+      font-size: .65rem; letter-spacing: .16em; text-transform: uppercase;
+      padding: 13px 28px; background: var(--black); color:var(--white);
+      transition: background .2s;
+    }
+    .btn-solid:hover { background: var(--g1); }
+    .btn-outline {
+      font-family: var(--mono);
+      font-size: .65rem; letter-spacing: .16em; text-transform: uppercase;
+      padding: 13px 28px; border:1px solid var(--g5); color:var(--g2);
+      transition: border-color .2s, color .2s;
+    }
+    .btn-outline:hover { border-color:var(--black); color:var(--black); }
+
+    /* Stats strip */
+    .h-stats {
+      display:grid; grid-template-columns: repeat(4,1fr);
+      border-top: 1px solid var(--line);
+    }
+    .h-stat {
+      padding: 2rem var(--pad);
+      border-right: 1px solid var(--line);
+      display:flex; flex-direction:column; gap:.4rem;
+    }
+    .h-stat:last-child { border-right:none; }
+    .h-stat-n {
+      font-family: var(--serif);
+      font-size: clamp(2rem,3.5vw,3rem);
+      font-weight: 300; line-height:1; color:var(--black);
+    }
+    .h-stat-l {
+      font-family: var(--mono);
+      font-size: .6rem; letter-spacing: .14em; text-transform:uppercase; color:var(--g3);
+    }
+
+    /* SECTIONS */
+    section { padding: clamp(4rem,10vw,9rem) var(--pad); }
+    .si { max-width: var(--max); margin:0 auto; }
+
+    .s-hd {
+      display:flex; align-items:flex-start; justify-content:space-between; gap:2rem;
+      padding-bottom: 3rem; margin-bottom: 4rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .s-num {
+      font-family: var(--mono);
+      font-size: .62rem; letter-spacing: .2em; color:var(--g4); padding-top:6px;
+    }
+    .s-ttl {
+      font-family: var(--serif);
+      font-size: clamp(2.4rem,5vw,4.5rem);
+      font-weight: 300; line-height: .95; letter-spacing: -.01em;
+    }
+    .s-ttl em { font-style:italic; color:var(--g3); }
+
+    /* ABOUT */
+    #about { background:var(--black); }
+    #about .s-ttl { color:var(--white); }
+    #about .s-ttl em { color:var(--g3); }
+    #about .s-num { color:var(--g2); }
+    #about .s-hd { border-bottom-color: rgba(248,248,246,.08); }
+
+    .about-cols { display:grid; grid-template-columns:1fr 1fr; gap:clamp(2rem,5vw,6rem); }
+    .about-bio { font-size:1.02rem; font-weight:300; color:rgba(248,248,246,.5); line-height:1.85; }
+    .about-bio p + p { margin-top:1.2rem; }
+    .about-facts { display:flex; flex-direction:column; }
+    .fact-row {
+      display:grid; grid-template-columns: 90px 1fr; gap:1rem;
+      padding: 1.1rem 0; border-bottom: 1px solid rgba(248,248,246,.06);
+    }
+    .fact-k { font-family:var(--mono); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; color:var(--g2); padding-top:2px; }
+    .fact-v { font-size:.875rem; font-weight:300; color:rgba(248,248,246,.55); }
+
+    /* SKILLS */
+    #skills { background:var(--white); }
+    .sk-table { width:100%; border-collapse:collapse; }
+    .sk-table tr { border-bottom: 1px solid var(--line); }
+    .sk-table tr:last-child { border-bottom:none; }
+    .sk-table td { padding:1.6rem 0; vertical-align:top; }
+    .sk-cat { font-family:var(--mono); font-size:.62rem; letter-spacing:.18em; text-transform:uppercase; color:var(--g3); white-space:nowrap; padding-right:3rem; width:160px; }
+    .sk-items { display:flex; flex-wrap:wrap; gap:.45rem; }
+    .sk-pill {
+      font-size:.8rem; font-weight:300; color:var(--black);
+      padding: 5px 12px; border:1px solid var(--g5);
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .sk-pill:hover { background:var(--black); color:var(--white); border-color:var(--black); }
+
+    /* PROJECTS */
+    #projects { background:var(--black); }
+    #projects .s-ttl { color:var(--white); }
+    #projects .s-ttl em { color:var(--g2); }
+    #projects .s-num { color:var(--g2); }
+    #projects .s-hd { border-bottom-color: rgba(248,248,246,.08); }
+
+    .proj-list { display:flex; flex-direction:column; }
+    .proj-item {
+      display:grid; grid-template-columns: 60px 1fr auto;
+      gap:2.5rem; align-items:start;
+      padding:3rem 0; border-bottom: 1px solid rgba(248,248,246,.07);
+      transition: opacity .2s;
+    }
+    .proj-item:hover { opacity:.65; }
+    .proj-idx { font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; color:var(--g2); padding-top:6px; }
+    .proj-ttl { font-family:var(--serif); font-size:clamp(1.5rem,3vw,2.2rem); font-weight:300; color:var(--white); line-height:1.1; margin-bottom:1rem; }
+    .proj-desc { font-size:.875rem; font-weight:300; color:rgba(248,248,246,.38); line-height:1.75; max-width:540px; margin-bottom:1.2rem; }
+    .proj-tags { display:flex; flex-wrap:wrap; gap:.4rem; }
+    .proj-tag { font-family:var(--mono); font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; color:var(--g2); border:1px solid rgba(248,248,246,.1); padding:3px 8px; }
+    .proj-r { text-align:right; display:flex; flex-direction:column; gap:.8rem; align-items:flex-end; padding-top:4px; }
+    .proj-yr { font-family:var(--mono); font-size:.6rem; letter-spacing:.12em; color:var(--g2); }
+    .proj-lk { font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--white); border-bottom:1px solid rgba(248,248,246,.2); padding-bottom:1px; transition:border-color .2s; }
+    .proj-lk:hover { border-color:var(--white); }
+
+    /* CONTACT */
+    #contact { background:var(--white); }
+    .contact-grid { display:grid; grid-template-columns:1fr 1.2fr; gap:clamp(2rem,6vw,8rem); align-items:start; }
+    .c-blurb { font-size:1rem; font-weight:300; color:var(--g2); line-height:1.8; margin-bottom:3rem; }
+    .c-rows { display:flex; flex-direction:column; }
+    .c-row { display:flex; justify-content:space-between; align-items:center; padding:1rem 0; border-bottom:1px solid var(--line); }
+    .c-row:first-child { border-top:1px solid var(--line); }
+    .c-key { font-family:var(--mono); font-size:.6rem; letter-spacing:.18em; text-transform:uppercase; color:var(--g3); }
+    .c-val { font-size:.875rem; font-weight:300; color:var(--black); }
+    .c-val a { border-bottom:1px solid var(--g5); transition:border-color .2s; }
+    .c-val a:hover { border-color:var(--black); }
+
+    .cform { display:flex; flex-direction:column; gap:1.5rem; }
+    .cf-f { display:flex; flex-direction:column; gap:.5rem; }
+    .cf-lbl { font-family:var(--mono); font-size:.6rem; letter-spacing:.18em; text-transform:uppercase; color:var(--g3); }
+    .cf-in, .cf-ta {
+      width:100%; background:transparent; border:none;
+      border-bottom:1px solid var(--g5);
+      padding:.7rem 0; font-family:var(--sans); font-size:.9rem;
+      font-weight:300; color:var(--black); outline:none;
+      transition:border-color .2s; resize:none;
+    }
+    .cf-in::placeholder, .cf-ta::placeholder { color:var(--g4); }
+    .cf-in:focus, .cf-ta:focus { border-color:var(--black); }
+    .cf-ta { height:100px; }
+    .cf-btn {
+      align-self:flex-start;
+      font-family:var(--mono); font-size:.65rem; letter-spacing:.18em; text-transform:uppercase;
+      padding:13px 28px; background:var(--black); color:var(--white);
+      border:none; cursor:pointer; transition:background .2s; margin-top:.4rem;
+    }
+    .cf-btn:hover { background:var(--g1); }
+    .cf-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .cf-msg { font-family:var(--mono); font-size:.68rem; letter-spacing:.04em; padding:.8rem 1rem; display:none; }
+    .cf-msg.ok { background:#f0f0ed; color:var(--g1); display:block; }
+    .cf-msg.err { background:#fdf0f0; color:#a03030; display:block; }
+
+    /* FOOTER */
+    footer {
+      padding:2rem var(--pad); border-top:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    footer span { font-family:var(--mono); font-size:.58rem; letter-spacing:.14em; text-transform:uppercase; color:var(--g4); }
+
+    /* SCROLL REVEAL */
+    .rv { opacity:0; transform:translateY(20px); transition:opacity .75s ease, transform .75s ease; }
+    .rv.on { opacity:1; transform:none; }
+    .d1 { transition-delay:.1s; }
+    .d2 { transition-delay:.2s; }
+
+    @keyframes rise {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:none; }
+    }
+
+    /* ONGOING BADGE */
+    .proj-metric {
+      font-family: var(--mono);
+      font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--black);
+      display: inline-flex; align-items: center; gap: .45rem;
+      border: 1px solid var(--black); padding: 4px 10px;
+    }
+    .proj-metric::before {
+      content: '';
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--black);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .3; transform: scale(.6); }
+    }
+
+    /* Stats labels responsive override */
+
+    /* RESPONSIVE */
+    @media (max-width:860px) {
+      .about-cols, .contact-grid { grid-template-columns:1fr; }
+      .proj-item { grid-template-columns:40px 1fr; }
+      .proj-r { display:none; }
+      .h-stats { grid-template-columns:1fr 1fr; }
+      .h-stat:nth-child(2n) { border-right:none; }
+      nav { grid-template-columns:1fr auto; }
+      .nav-links { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="ld-name">Aakash Ezhava</div>
+  <div class="ld-bar"></div>
+</div>
+
+<div id="cur"></div>
+
+<nav>
+  <span class="nav-logo" id="navLogo">YN</span>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right"><a href="#contact" class="nav-cta">Available for work</a></div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="hero-content">
+        <p class="h-eye" id="hEye">Data Analytics Engineer</p>
+        <h1 class="h-name" id="hName">Your<br /><em>Name</em></h1>
+        <p class="h-sub" id="hSub">Turning raw data into decisions that matter.</p>
+        <div class="h-btns">
+          <a href="#projects" class="btn-solid">View Work</a>
+          <a href="#contact" class="btn-outline">Get In Touch</a>
+        </div>
+      </div>
+    </div>
+    <div class="h-stats">
+      <div class="h-stat rv"><span class="h-stat-n" id="s0">—</span><span class="h-stat-l">Stage</span></div>
+      <div class="h-stat rv d1"><span class="h-stat-n" id="s1">—</span><span class="h-stat-l">Active Projects</span></div>
+      <div class="h-stat rv d1"><span class="h-stat-n" id="s2">—</span><span class="h-stat-l">Data Processed</span></div>
+      <div class="h-stat rv d2"><span class="h-stat-n" id="s3">—</span><span class="h-stat-l">Models Built</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="si">
+    <div class="s-hd rv"><span class="s-num">01</span><h2 class="s-ttl">About<br /><em>me.</em></h2></div>
+    <div class="about-cols">
+      <div class="about-bio rv" id="aBio"></div>
+      <div class="about-facts rv d1" id="aFacts"></div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="si">
+    <div class="s-hd rv"><span class="s-num">02</span><h2 class="s-ttl">My<br /><em>skills.</em></h2></div>
+    <table class="sk-table rv"><tbody id="skBody"></tbody></table>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="si">
+    <div class="s-hd rv"><span class="s-num">03</span><h2 class="s-ttl">Selected<br /><em>work.</em></h2></div>
+    <div class="proj-list rv" id="projList"></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="si">
+    <div class="s-hd rv"><span class="s-num">03</span><h2 class="s-ttl">Get in<br /><em>touch.</em></h2></div>
+    <div class="contact-grid">
+      <div class="rv">
+        <p class="c-blurb">Have a project in mind or want to explore what data can do for your business? I'd love to hear from you.</p>
+        <div class="c-rows" id="cRows"></div>
+      </div>
+      <form class="cform rv d1" id="cForm">
+        <div class="cf-f"><label class="cf-lbl" for="cin">Name</label><input class="cf-in" id="cin" name="name" type="text" placeholder="Jane Smith" required /></div>
+        <div class="cf-f"><label class="cf-lbl" for="cem">Email</label><input class="cf-in" id="cem" name="email" type="email" placeholder="jane@company.com" required /></div>
+        <div class="cf-f"><label class="cf-lbl" for="cta">Message</label><textarea class="cf-ta" id="cta" name="message" placeholder="Tell me about your project…" required></textarea></div>
+        <div class="cf-msg" id="cMsg"></div>
+        <button type="submit" class="cf-btn" id="cBtn">Send Message</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span id="fName">Aakash Ezhava — AI Data Analyst</span>
+  <span>© 2025</span>
+</footer>
+
+<script>
+const API = ''; // '' = same origin; set to 'http://localhost:3001' for local dev
+
+const FALLBACK = {
+  personal: {
+    name: "Aakash Ezhava", title: "AI Data Analyst",
+    tagline: "Transforming data into intelligence, one model at a time.",
+    bio: "I'm an AI Data Analyst passionate about merging data analytics with artificial intelligence to surface insights that drive real decisions. I work at the intersection of machine learning, data engineering, and business strategy.\n\nCurrently building out AI-powered analytics solutions — from natural language querying of databases to automated insight generation and predictive dashboards.",
+    location: "India", email: "aakash@ezhava.com",
+    github: "github.com/aakashezhava", linkedin: "linkedin.com/in/aakashezhava"
+  },
+  skills: [
+    { category:"Languages",     items:["Python","SQL","R"] },
+    { category:"Visualization", items:["Tableau","Power BI","Plotly","D3.js","Matplotlib"] },
+    { category:"Cloud & Infra", items:["GCP BigQuery","AWS S3","Snowflake","Airflow","dbt"] },
+    { category:"Tools",         items:["Git","Docker","Jupyter","VS Code","Postgres","Streamlit"] }
+  ],
+  projects: [
+    { title:"AI-Powered Sales Intelligence", description:"Building an LLM-driven analytics layer that lets business teams query their sales data in plain English — no SQL required. Integrates GPT-4 with a live Postgres warehouse.", tags:["Python","LangChain","GPT-4","Postgres"], status:"Ongoing", year:"2025", github:"#" },
+    { title:"Automated Insight Engine", description:"Developing a pipeline that scans dashboards nightly and auto-generates executive summaries using NLP, flagging anomalies before stakeholders even ask.", tags:["Python","OpenAI API","Airflow","Tableau"], status:"Ongoing", year:"2025", github:"#" },
+    { title:"Predictive Churn Model", description:"End-to-end ML pipeline to predict customer churn for a SaaS product, combining behavioural signals and LLM-summarised support ticket sentiment.", tags:["Python","XGBoost","BERT","AWS"], status:"Ongoing", year:"2025", github:"#" }
+  ],
+  stats: { yearsExperience:"Early", projectsCompleted:"3", dataProcessed:"Growing", clientsSatisfied:"5+" }
+};
+
+function render(d) {
+  const p = d.personal, s = d.stats;
+
+  const initials = p.name.split(' ').map(w=>w[0]).join('');
+  document.getElementById('navLogo').textContent = initials;
+  document.getElementById('fName').textContent = p.name + ' — AI Data Analyst';
+
+  document.getElementById('hEye').textContent = p.title;
+  const pts = p.name.split(' ');
+  document.getElementById('hName').innerHTML = pts[0] + '<br /><em>' + pts.slice(1).join(' ') + '</em>';
+  document.getElementById('hSub').textContent = p.tagline;
+
+  const sv = [s.yearsExperience, s.projectsCompleted, s.dataProcessed, s.clientsSatisfied];
+  sv.forEach((v,i) => document.getElementById('s'+i).textContent = v);
+
+  document.getElementById('aBio').innerHTML = p.bio.split('\n\n').filter(Boolean).map(t => `<p>${t}</p>`).join('');
+
+  document.getElementById('aFacts').innerHTML = [
+    {k:'Location', v:p.location}, {k:'Email', v:p.email},
+    {k:'GitHub', v:p.github}, {k:'LinkedIn', v:p.linkedin}
+  ].map(f => `<div class="fact-row"><span class="fact-k">${f.k}</span><span class="fact-v">${f.v}</span></div>`).join('');
+
+  document.getElementById('skBody').innerHTML = d.skills.map(g =>
+    `<tr><td class="sk-cat">${g.category}</td><td><div class="sk-items">${g.items.map(t=>`<span class="sk-pill">${t}</span>`).join('')}</div></td></tr>`
+  ).join('');
+
+  document.getElementById('projList').innerHTML = d.projects.map((pr,i) =>
+    `<div class="proj-item">
+      <span class="proj-idx">0${i+1}</span>
+      <div>
+        <h3 class="proj-ttl">${pr.title}</h3>
+        <p class="proj-desc">${pr.description}</p>
+        <div class="proj-tags">${pr.tags.map(t=>`<span class="proj-tag">${t}</span>`).join('')}</div>
+      </div>
+      <div class="proj-r">
+        <span class="proj-metric">${pr.status || pr.metric || ''}</span>
+        <span class="proj-yr">${pr.year}</span>
+        <a class="proj-lk" href="${pr.github}">GitHub ↗</a>
+      </div>
+    </div>`
+  ).join('');
+
+  document.getElementById('cRows').innerHTML = [
+    {k:'Email',    v:`<a href="mailto:${p.email}">${p.email}</a>`},
+    {k:'GitHub',   v:`<a href="https://${p.github}" target="_blank">${p.github}</a>`},
+    {k:'LinkedIn', v:`<a href="https://${p.linkedin}" target="_blank">${p.linkedin}</a>`},
+    {k:'Location', v:p.location}
+  ].map(r=>`<div class="c-row"><span class="c-key">${r.k}</span><span class="c-val">${r.v}</span></div>`).join('');
+}
+
+async function init() {
+  try {
+    const r = await fetch(API+'/api/portfolio', {signal:AbortSignal.timeout(4000)});
+    if(!r.ok) throw 0;
+    render((await r.json()).data);
+  } catch { render(FALLBACK); }
+}
+
+document.getElementById('cForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('cBtn'), msg = document.getElementById('cMsg');
+  const body = {name:e.target.name.value, email:e.target.email.value, message:e.target.message.value};
+  btn.disabled=true; btn.textContent='Sending…'; msg.className='cf-msg';
+  try {
+    const r = await fetch(API+'/api/contact', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), signal:AbortSignal.timeout(5000)});
+    const j = await r.json();
+    if(j.success) { msg.textContent=j.message; msg.className='cf-msg ok'; e.target.reset(); }
+    else throw new Error(j.error);
+  } catch(err) {
+    msg.textContent=err.message||'Something went wrong — please email me directly.';
+    msg.className='cf-msg err';
+  }
+  btn.disabled=false; btn.textContent='Send Message';
+});
+
+// Cursor
+const cur = document.getElementById('cur');
+document.addEventListener('mousemove', e => { cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px'; });
+document.querySelectorAll('a,button,.sk-pill,.proj-item').forEach(el => {
+  el.addEventListener('mouseenter',()=>cur.classList.add('big'));
+  el.addEventListener('mouseleave',()=>cur.classList.remove('big'));
+});
+
+// Reveal
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); }});
+}, {threshold:.08});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+
+// Boot
+window.addEventListener('load', () => {
+  init().then(() => setTimeout(()=>document.getElementById('loader').classList.add('gone'), 1600));
+});
+</script>
+</body>
+</html>
